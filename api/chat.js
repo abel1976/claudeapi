@@ -5,11 +5,11 @@ export default async function handler(req, res) {
 
   const { messages } = req.body;
 
-  // Prompt di sistema per guidare l'avventura testuale
+  // Prompt di sistema per l'avventura testuale RPG
   const systemPrompt = {
     role: "system",
     content: "Sei un Dungeon Master esperto per un'avventura testuale RPG. " +
-             "Descrivi l'ambiente, le conseguenze delle azioni del giocatore in modo immersivo e dinamico. " +
+             "Descrivi l'ambiente e le conseguenze delle azioni del giocatore in modo immersivo. " +
              "Alla fine di ogni risposta proponi SEMPRE 4 scelte numerate (1, 2, 3, 4) su cosa fare, " +
              "lasciando la possibilità di fare un'azione personalizzata."
   };
@@ -22,7 +22,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'meta-llama/llama-3.3-70b-instruct:free', // Modello open-source gratuito
+        model: 'meta-llama/llama-3.3-70b-instruct:free',
         messages: [systemPrompt, ...messages]
       })
     });
@@ -33,7 +33,6 @@ export default async function handler(req, res) {
       throw new Error(data.error?.message || 'Errore nella richiesta ad OpenRouter');
     }
 
-    // Risposta formattata per il frontend
     const reply = data.choices[0].message.content;
     return res.status(200).json({ content: [{ text: reply }] });
 
