@@ -1,42 +1,25 @@
-export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Metodo non consentito' });
-  }
+export const config = { runtime: 'edge' };
 
-  const { messages } = req.body;
+export default async function handler(req) {
+  if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 });
 
-  // Prompt di sistema per l'avventura testuale RPG
-  const systemPrompt = {
-    role: "system",
-    content: "Sei un Dungeon Master esperto per un'avventura testuale RPG. " +
-             "Descrivi l'ambiente e le conseguenze delle azioni del giocatore in modo immersivo. " +
-             "Alla fine di ogni risposta proponi SEMPRE 4 scelte numerate (1, 2, 3, 4) su cosa fare, " +
-             "lasciando la possibilità di fare un'azione personalizzata."
-  };
+  const { messages } = await req.json();
 
-  try {
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'meta-llama/llama-3.3-70b-instruct:free',
-        messages: [systemPrompt, ...messages]
-      })
-    });
+  const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      Authorization: 'Bearer ' + process.env.OPENROUTER_API_KEY,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'openrouter/auto', // scegli tu il modello, fisso lato server
+      messages,
+      stream: true,
+    }),
+  });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error?.message || 'Errore nella richiesta ad OpenRouter');
-    }
-
-    const reply = data.choices[0].message.content;
-    return res.status(200).json({ content: [{ text: reply }] });
-
-  } catch (error) {
-    return res.status(500).json({ error: error.message });
-  }
+  return new Response(r.body, {
+    status: r.status,
+    headers: { 'Content-Type': r.headers.get('Content-Type') || 'text/event-stream' },
+  });
 }
