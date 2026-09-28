@@ -103,7 +103,7 @@
       appendMessage('assistant', reply);
       history.push({ role: 'assistant', content: reply });
     } catch (err) {
-      appendMessage('assistant', 'Errore nella comunicazione con il server.');
+       appendMessage('assistant', 'Errore: ' + err.message);;
     } finally {
       document.getElementById('send-btn').disabled = false;
     }
